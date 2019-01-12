@@ -1,5 +1,5 @@
 # SQS queue
-resource "aws_sqs_queue" "lambda_consumer_q" {
+data "aws_sqs_queue" "lambda_consumer_q" {
 	name = "${var.sqs_queue_name}"
 }
 
@@ -49,7 +49,7 @@ resource "aws_iam_policy" "lambda_consumer_sqsp" {
 	"Statement": [
 		{
 			"Action": ["sqs:*"],
-			"Resource": "${aws_sqs_queue.lambda_consumer_q.arn}",
+			"Resource": "${data.aws_sqs_queue.lambda_consumer_q.arn}",
 			"Effect": "Allow"
 		}
 	]
@@ -103,7 +103,7 @@ resource "aws_lambda_function" "lambda_consumer_f" {
 
 # lambda event source mapping - no VPC config
 resource "aws_lambda_event_source_mapping" "lambda_consumer_m" {
-	event_source_arn = "${aws_sqs_queue.lambda_consumer_q.arn}"
+	event_source_arn = "${data.aws_sqs_queue.lambda_consumer_q.arn}"
 	function_name = "${aws_lambda_function.lambda_consumer_f.arn}"
 
 	count = "${length(var.lambda_vpc_security_group_ids) != 0 && length(var.lambda_vpc_subnet_ids) != 0 ? 0 : 1}"
@@ -132,7 +132,7 @@ resource "aws_lambda_function" "lambda_consumer_fvpc" {
 
 # lambda event source mapping - VPC config
 resource "aws_lambda_event_source_mapping" "lambda_consumer_mvpc" {
-	event_source_arn = "${aws_sqs_queue.lambda_consumer_q.arn}"
+	event_source_arn = "${data.aws_sqs_queue.lambda_consumer_q.arn}"
 	function_name = "${aws_lambda_function.lambda_consumer_fvpc.arn}"
 
 	count = "${length(var.lambda_vpc_security_group_ids) != 0 && length(var.lambda_vpc_subnet_ids) != 0 ? 1 : 0}"
